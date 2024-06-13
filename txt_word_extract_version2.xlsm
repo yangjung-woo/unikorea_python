@@ -1,0 +1,62 @@
+Sub 텍스트파일을엑셀로변환()
+    Dim txtFileName As String
+    Dim xlsxFileName As String
+    Dim stream As Object
+    Dim fileContent As String
+    Dim lines As Variant
+    Dim i As Integer
+    Dim currentName As String
+    Dim currentSummary As String
+    Dim r As Integer
+    
+    ' 텍스트 파일 경로 설정
+    txtFileName = "C:\경로\텍스트파일.txt" ' 텍스트 파일 경로로 변경하세요
+    xlsxFileName = "C:\경로\스프레드시트.xlsx" ' 저장할 엑셀 파일 경로로 변경하세요
+    
+    ' ADODB.Stream 객체 초기화
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = 2 ' Text stream
+    stream.Charset = "utf-8" ' UTF-8 인코딩 설정
+    stream.Open
+    stream.LoadFromFile txtFileName
+    fileContent = stream.ReadText
+    stream.Close
+    Set stream = Nothing
+    
+    ' 내용을 줄별로 분리
+    lines = Split(fileContent, vbCrLf)
+    
+    ' Excel 변수 초기화
+    Dim xlApp As Object
+    Dim xlBook As Object
+    Set xlApp = CreateObject("Excel.Application")
+    Set xlBook = xlApp.Workbooks.Add
+    
+    r = 1 ' 첫 번째 행부터 시작
+    
+    ' 각 줄을 확인하며 이름과 개요 찾기
+    For i = LBound(lines) To UBound(lines)
+        ' 줄에 이름 패턴이 포함되어 있는지 확인
+        If InStr(lines(i), "&") > 0 Then
+            currentName = Mid(lines(i), InStr(lines(i), "&") + 1)
+            currentName = Mid(currentName, 1, InStr(currentName, "&") - 1)
+            xlBook.Worksheets(1).Cells(r, 1).Value = currentName
+        End If
+        
+        ' 줄에 개요 패턴이 포함되어 있는지 확인
+        If InStr(lines(i), "%") > 0 Then
+            currentSummary = Mid(lines(i), InStr(lines(i), "%") + 1)
+            currentSummary = Mid(currentSummary, 1, InStr(currentSummary, "%") - 1)
+            xlBook.Worksheets(1).Cells(r, 2).Value = currentSummary
+            r = r + 1 ' 다음 행으로 이동
+        End If
+    Next i
+    
+    ' Excel 파일 저장
+    xlBook.SaveAs xlsxFileName
+    xlApp.Quit
+    
+    ' 정리
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+    
