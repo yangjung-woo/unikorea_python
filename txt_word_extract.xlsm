@@ -1,0 +1,75 @@
+Sub ImportTextFileToExcel()
+    Dim FilePath As String
+    Dim TextData As String
+    Dim NameColumn As String
+    Dim OverviewColumn As String
+    Dim LastRow As Long
+    Dim fs As Object
+    Dim ts As Object
+    Dim NameStart As Boolean
+    Dim OverviewStart As Boolean
+    Dim ExcelApp As Object
+    Dim ExcelWorkbook As Object
+    Dim ExcelSheet As Object
+
+    ' 텍스트 파일 경로 지정
+    FilePath = "C:\Path\To\Your\File.txt"
+
+    ' FileSystemObject 생성
+    Set fs = CreateObject("Scripting.FileSystemObject")
+
+    ' 텍스트 파일 열기
+    Set ts = fs.OpenTextFile(FilePath, 1, False, -1) ' UTF-8 인코딩으로 파일 열기
+
+    ' 엑셀 애플리케이션 및 워크북 생성
+    Set ExcelApp = CreateObject("Excel.Application")
+    ExcelApp.Visible = True
+    Set ExcelWorkbook = ExcelApp.Workbooks.Add
+    Set ExcelSheet = ExcelWorkbook.Sheets(1)
+
+    ' 엑셀 시트에 헤더 추가
+    ExcelSheet.Cells(1, 1).Value = "이름"
+    ExcelSheet.Cells(1, 2).Value = "개요"
+    LastRow = 1
+
+    ' 텍스트 파일 내용 읽기
+    Do Until ts.AtEndOfStream
+        TextData = ts.ReadLine
+        If Left(TextData, 1) = "%" Then
+            ' 이름 추출
+            NameColumn = Trim(Mid(TextData, 2))
+            NameStart = True
+            OverviewStart = False
+        ElseIf Left(TextData, 1) = "&" Then
+            ' 개요 추출
+            OverviewColumn = Trim(Mid(TextData, 2))
+            OverviewStart = True
+            NameStart = False
+        ElseIf NameStart Then
+            ' 이름 엑셀에 기록
+            LastRow = LastRow + 1
+            ExcelSheet.Cells(LastRow, 1).Value = NameColumn
+        ElseIf OverviewStart Then
+            ' 개요 엑셀에 기록
+            ExcelSheet.Cells(LastRow, 2).Value = OverviewColumn
+        End If
+    Loop
+
+    ' 파일 닫기
+    ts.Close
+
+    ' 저장할 경로 및 파일 이름 지정
+    Dim SavePath As String
+    SavePath = "C:\Path\To\Save\Your\ExcelFile.xlsx"
+
+    ' 엑셀 파일 저장
+    ExcelWorkbook.SaveAs SavePath
+
+    ' 엑셀 애플리케이션 종료
+    ExcelApp.Quit
+
+    ' 메모리 해제
+    Set ExcelSheet = Nothing
+    Set ExcelWorkbook = Nothing
+    Set ExcelApp = Nothing
+End Sub
