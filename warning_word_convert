@@ -1,0 +1,10 @@
+Sub ReplaceText()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets(1)  ' 첫 번째 워크시트를 사용합니다. 필요에 따라 조정하세요.
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row  ' A열에서 마지막으로 데이터가 있는 행을 찾습니다.
+    
+    Dim i As Long
+    For i = 1 To lastRow  ' 1행부터 마지막 행까지 반복
+        If InStr(ws.Cells(i, 1).Val
